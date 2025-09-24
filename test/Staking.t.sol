@@ -12,7 +12,7 @@ contract StakingTest is Test {
 
     address owner = makeAddr("owner");
     address bob = makeAddr("bob");
-    address alice = makeAddr("alice");
+    address dso = makeAddr("dso");
     address charlie = makeAddr("charlie");
 
     event RewardAdded(uint256 reward);
@@ -350,7 +350,7 @@ contract StakingTest is Test {
     function test_multiple_users_staking_and_rewards() public {
         // Setup multiple users with tokens
         deal(address(stakingToken), bob, 10e18);
-        deal(address(stakingToken), alice, 10e18);
+        deal(address(stakingToken), dso, 10e18);
         deal(address(stakingToken), charlie, 10e18);
 
         // Bob stakes first
@@ -370,8 +370,8 @@ contract StakingTest is Test {
         // Fast forward 1 day
         vm.warp(block.timestamp + 1 days);
 
-        // Alice stakes (should trigger reward update for Alice)
-        vm.startPrank(alice);
+        // dso stakes (should trigger reward update for dso)
+        vm.startPrank(dso);
         IERC20(address(stakingToken)).approve(address(staking), type(uint256).max);
         staking.stake(2e18);
         vm.stopPrank();
@@ -387,7 +387,7 @@ contract StakingTest is Test {
 
         // Check that all users have earned rewards
         assertTrue(staking.earned(bob) > 0, "Bob should have earned rewards");
-        assertTrue(staking.earned(alice) > 0, "Alice should have earned rewards");
+        assertTrue(staking.earned(dso) > 0, "dso should have earned rewards");
         assertEq(staking.earned(charlie), 0, "Charlie should have no rewards yet");
 
         // Fast forward and check Charlie has rewards
@@ -398,15 +398,15 @@ contract StakingTest is Test {
     function test_reward_distribution_fairness() public {
         // Setup two users with different stake amounts
         deal(address(stakingToken), bob, 10e18);
-        deal(address(stakingToken), alice, 10e18);
+        deal(address(stakingToken), dso, 10e18);
 
-        // Bob stakes 1 token, Alice stakes 3 tokens (3:1 ratio)
+        // Bob stakes 1 token, dso stakes 3 tokens (3:1 ratio)
         vm.startPrank(bob);
         IERC20(address(stakingToken)).approve(address(staking), type(uint256).max);
         staking.stake(1e18);
         vm.stopPrank();
 
-        vm.startPrank(alice);
+        vm.startPrank(dso);
         IERC20(address(stakingToken)).approve(address(staking), type(uint256).max);
         staking.stake(3e18);
         vm.stopPrank();
@@ -423,11 +423,11 @@ contract StakingTest is Test {
         vm.warp(block.timestamp + 1 weeks);
 
         uint256 bobEarned = staking.earned(bob);
-        uint256 aliceEarned = staking.earned(alice);
+        uint256 dsoEarned = staking.earned(dso);
 
-        // Alice should earn approximately 3x what Bob earns (allowing for rounding)
-        assertGt(aliceEarned, bobEarned * 2, "Alice should earn significantly more than Bob");
-        assertLt(aliceEarned, bobEarned * 4, "Alice should not earn more than 4x Bob's rewards");
+        // dso should earn approximately 3x what Bob earns (allowing for rounding)
+        assertGt(dsoEarned, bobEarned * 2, "dso should earn significantly more than Bob");
+        assertLt(dsoEarned, bobEarned * 4, "dso should not earn more than 4x Bob's rewards");
     }
 
     function test_stake_withdraw_updates_rewards() public {
